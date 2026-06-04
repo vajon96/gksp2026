@@ -1519,42 +1519,144 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       />
                     </div>
                     <div className="col-span-2">
-                      <label className={tLabelClass}>Core Logo Avatar URL Link</label>
-                      <input
-                        type="text"
-                        className={tFormClass}
-                        value={orgFormSettings.logoUrl || ""}
-                        onChange={(e) => setOrgFormSettings({ ...orgFormSettings, logoUrl: e.target.value })}
-                      />
+                      <label className={tLabelClass}>Core Logo Avatar URL or Upload File</label>
+                      <div className="flex flex-col gap-2">
+                        <input
+                          type="text"
+                          className={tFormClass}
+                          value={orgFormSettings.logoUrl || ""}
+                          placeholder="Paste image link..."
+                          onChange={(e) => setOrgFormSettings({ ...orgFormSettings, logoUrl: e.target.value })}
+                        />
+                        <div className="flex items-center gap-2">
+                          <label className="cursor-pointer bg-amber-600 hover:bg-amber-700 text-white font-bold text-[10px] uppercase px-3 py-1.5 rounded-lg inline-block transition-colors shrink-0">
+                            📁 Upload Logo File
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  const reader = new FileReader();
+                                  reader.onloadend = () => {
+                                    setOrgFormSettings(prev => ({ ...prev, logoUrl: reader.result as string }));
+                                  };
+                                  reader.readAsDataURL(file);
+                                }
+                              }}
+                            />
+                          </label>
+                          {orgFormSettings.logoUrl && orgFormSettings.logoUrl.startsWith("data:") && (
+                            <span className="text-[10px] text-green-600 font-bold">✔ Direct upload stored</span>
+                          )}
+                        </div>
+                      </div>
                     </div>
                     <div className="col-span-2">
-                      <label className={tLabelClass}>Favicon Icon URL Link</label>
-                      <input
-                        type="text"
-                        className={tFormClass}
-                        value={orgFormSettings.faviconUrl || ""}
-                        placeholder="e.g. https://domain.com/favicon.ico"
-                        onChange={(e) => setOrgFormSettings({ ...orgFormSettings, faviconUrl: e.target.value })}
-                      />
+                      <label className={tLabelClass}>Favicon Icon URL or Upload File</label>
+                      <div className="flex flex-col gap-2">
+                        <input
+                          type="text"
+                          className={tFormClass}
+                          value={orgFormSettings.faviconUrl || ""}
+                          placeholder="Paste favicon or image link..."
+                          onChange={(e) => setOrgFormSettings({ ...orgFormSettings, faviconUrl: e.target.value })}
+                        />
+                        <div className="flex items-center gap-2">
+                          <label className="cursor-pointer bg-amber-600 hover:bg-amber-700 text-white font-bold text-[10px] uppercase px-3 py-1.5 rounded-lg inline-block transition-colors shrink-0">
+                            📁 Upload Favicon File
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  const reader = new FileReader();
+                                  reader.onloadend = () => {
+                                    setOrgFormSettings(prev => ({ ...prev, faviconUrl: reader.result as string }));
+                                  };
+                                  reader.readAsDataURL(file);
+                                }
+                              }}
+                            />
+                          </label>
+                          {orgFormSettings.faviconUrl && orgFormSettings.faviconUrl.startsWith("data:") && (
+                            <span className="text-[10px] text-green-600 font-bold">✔ Direct upload stored</span>
+                          )}
+                        </div>
+                      </div>
                     </div>
                     <div className="col-span-2">
-                      <label className={tLabelClass}>Home Slider Temple Banner URL Link</label>
-                      <input
-                        type="text"
-                        className={tFormClass}
-                        value={orgFormSettings.bannerUrl || ""}
-                        onChange={(e) => setOrgFormSettings({ ...orgFormSettings, bannerUrl: e.target.value })}
-                      />
+                      <label className={tLabelClass}>Home Slider Temple Banner URL or Upload File</label>
+                      <div className="flex flex-col gap-2">
+                        <input
+                          type="text"
+                          className={tFormClass}
+                          value={orgFormSettings.bannerUrl || ""}
+                          placeholder="Paste banner image link..."
+                          onChange={(e) => setOrgFormSettings({ ...orgFormSettings, bannerUrl: e.target.value })}
+                        />
+                        <div className="flex items-center gap-2">
+                          <label className="cursor-pointer bg-amber-600 hover:bg-amber-700 text-white font-bold text-[10px] uppercase px-3 py-1.5 rounded-lg inline-block transition-colors shrink-0">
+                            📁 Upload Banner File
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  const reader = new FileReader();
+                                  reader.onloadend = () => {
+                                    setOrgFormSettings(prev => ({ ...prev, bannerUrl: reader.result as string }));
+                                  };
+                                  reader.readAsDataURL(file);
+                                }
+                              }}
+                            />
+                          </label>
+                          {orgFormSettings.bannerUrl && orgFormSettings.bannerUrl.startsWith("data:") && (
+                            <span className="text-[10px] text-green-600 font-bold">✔ Direct upload stored</span>
+                          )}
+                        </div>
+                      </div>
                     </div>
                     <div className="col-span-2">
-                      <label className={tLabelClass}>Custom Background Wallpaper URL Link</label>
-                      <input
-                        type="text"
-                        className={tFormClass}
-                        value={orgFormSettings.bgImageUrl || ""}
-                        placeholder="e.g. Unsplash subtle pattern image URL"
-                        onChange={(e) => setOrgFormSettings({ ...orgFormSettings, bgImageUrl: e.target.value })}
-                      />
+                      <label className={tLabelClass}>Custom Background Wallpaper URL or Upload File</label>
+                      <div className="flex flex-col gap-2">
+                        <input
+                          type="text"
+                          className={tFormClass}
+                          value={orgFormSettings.bgImageUrl || ""}
+                          placeholder="Paste background image link..."
+                          onChange={(e) => setOrgFormSettings({ ...orgFormSettings, bgImageUrl: e.target.value })}
+                        />
+                        <div className="flex items-center gap-2">
+                          <label className="cursor-pointer bg-amber-600 hover:bg-amber-700 text-white font-bold text-[10px] uppercase px-3 py-1.5 rounded-lg inline-block transition-colors shrink-0">
+                            📁 Upload Background File
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  const reader = new FileReader();
+                                  reader.onloadend = () => {
+                                    setOrgFormSettings(prev => ({ ...prev, bgImageUrl: reader.result as string }));
+                                  };
+                                  reader.readAsDataURL(file);
+                                }
+                              }}
+                            />
+                          </label>
+                          {orgFormSettings.bgImageUrl && orgFormSettings.bgImageUrl.startsWith("data:") && (
+                            <span className="text-[10px] text-green-600 font-bold">✔ Direct upload stored</span>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

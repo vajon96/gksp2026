@@ -23,7 +23,7 @@ export const PVCIDCard: React.FC<PVCIDCardProps> = ({
   const gColor = customGold || settings.themeGold || "#D4AF37";
 
   return (
-    <div className="flex flex-col md:flex-row items-center justify-center gap-8 p-4 bg-transparent">
+    <div className="flex flex-col md:flex-row items-center justify-center gap-8 p-4 bg-transparent max-w-full overflow-x-auto md:overflow-x-visible">
       {/* Front Side */}
       <div
         id={`pvc-front-${member.memberId}`}

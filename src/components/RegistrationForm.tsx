@@ -665,68 +665,99 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSubmit, la
           {/* Uploads Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Photo loader */}
-            <div className="border border-dashed border-gray-200 hover:border-[#E05A10]/50 p-5 rounded-2xl flex flex-col items-center justify-center text-center cursor-pointer relative bg-white transition-all">
-              <label className="text-xs font-bold text-gray-700 cursor-pointer block mb-2">{dict.photoUpload} *</label>
-              <input
-                type="file"
-                accept="image/*"
-                className="opacity-0 absolute inset-0 z-10 cursor-pointer"
-                onChange={(e) => handleFileChange(e, "photoUrl")}
-              />
+            <div>
               {formData.photoUrl ? (
-                <div className="relative w-24 h-24 rounded-lg overflow-hidden border">
-                  <img src={formData.photoUrl} alt="Photo Preview" className="w-full h-full object-cover" />
-                  <span className="absolute bottom-1 right-1 bg-green-500 text-white rounded-full p-0.5 text-[8px] font-bold">✔</span>
+                <div id="photo-loaded-container" className="border border-solid border-green-200 bg-green-50/20 p-6 rounded-2xl flex flex-col items-center justify-center text-center min-h-[160px]">
+                  <span className="text-xs font-bold text-green-700 mb-2 uppercase tracking-wide flex items-center gap-1">✔ {lang === "en" ? "Photo Selected" : "ছবি যুক্ত হয়েছে"}</span>
+                  <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-green-300 shadow-sm mb-3 bg-white">
+                    <img src={formData.photoUrl} alt="Photo Preview" className="w-full h-full object-cover" />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, photoUrl: "" }))}
+                    className="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-[10px] font-extrabold uppercase rounded-lg tracking-wider transition-colors cursor-pointer"
+                  >
+                    {lang === "en" ? "Remove / Clear" : "ছবিটি মুছুন 🗑"}
+                  </button>
                 </div>
               ) : (
-                <div className="text-center py-2 text-gray-400">
-                  <span className="text-3xl block">👤</span>
-                  <span className="text-[10px] uppercase font-bold mt-2 block select-none">Click to upload Passport photo</span>
+                <div id="photo-picker-container" className="border border-dashed border-gray-200 hover:border-[#E05A10]/50 p-6 rounded-2xl flex flex-col items-center justify-center text-center bg-gray-50/50 hover:bg-orange-50/10 transition-all min-h-[160px] relative">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    id="photo-file-input"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    onChange={(e) => handleFileChange(e, "photoUrl")}
+                  />
+                  <span className="text-3xl mb-2">👤</span>
+                  <span className="text-xs font-bold text-gray-700 block mb-1">{dict.photoUpload} *</span>
+                  <span className="text-[10px] font-medium text-gray-400 tracking-wide">ক্লিক করে ছবি সিলেক্ট করুন <br />(Click to select/snap photograph)</span>
                 </div>
               )}
-              {errors.photoUrl && <p className="text-[11px] font-bold text-red-500 mt-2">{errors.photoUrl}</p>}
+              {errors.photoUrl && <p className="text-[11px] font-bold text-red-500 mt-2 text-center">{errors.photoUrl}</p>}
             </div>
 
             {/* Signature loader */}
-            <div className="border border-dashed border-gray-200 hover:border-[#E05A10]/50 p-5 rounded-2xl flex flex-col items-center justify-center text-center cursor-pointer relative bg-white transition-all">
-              <label className="text-xs font-bold text-gray-700 cursor-pointer block mb-2">{dict.signatureUpload} *</label>
-              <input
-                type="file"
-                accept="image/*"
-                className="opacity-0 absolute inset-0 z-10 cursor-pointer"
-                onChange={(e) => handleFileChange(e, "signatureUrl")}
-              />
+            <div>
               {formData.signatureUrl ? (
-                <div className="relative w-36 h-12 rounded overflow-hidden border flex items-center justify-center bg-gray-50">
-                  <img src={formData.signatureUrl} alt="Signature Preview" className="h-full object-contain" />
-                  <span className="absolute bottom-1 right-1 bg-green-500 text-white rounded-full p-0.5 text-[8px] font-bold">✔</span>
+                <div id="signature-loaded-container" className="border border-solid border-green-200 bg-green-50/20 p-6 rounded-2xl flex flex-col items-center justify-center text-center min-h-[160px]">
+                  <span className="text-xs font-bold text-green-700 mb-2 uppercase tracking-wide flex items-center gap-1">✔ {lang === "en" ? "Signature Selected" : "স্বাক্ষর যুক্ত হয়েছে"}</span>
+                  <div className="relative w-36 h-12 rounded overflow-hidden border border-green-300 shadow-sm mb-3 bg-white flex items-center justify-center p-1">
+                    <img src={formData.signatureUrl} alt="Signature Preview" className="h-full max-w-full object-contain" />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, signatureUrl: "" }))}
+                    className="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-[10px] font-extrabold uppercase rounded-lg tracking-wider transition-colors cursor-pointer"
+                  >
+                    {lang === "en" ? "Remove / Clear" : "স্বাক্ষর মুছুন 🗑"}
+                  </button>
                 </div>
               ) : (
-                <div className="text-center py-2 text-gray-400">
-                  <span className="text-3xl block">🖊️</span>
-                  <span className="text-[10px] uppercase font-bold mt-2 block select-none">Click to upload scanned signature</span>
+                <div id="signature-picker-container" className="border border-dashed border-gray-200 hover:border-[#E05A10]/50 p-6 rounded-2xl flex flex-col items-center justify-center text-center bg-gray-50/50 hover:bg-orange-50/10 transition-all min-h-[160px] relative">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    id="signature-file-input"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    onChange={(e) => handleFileChange(e, "signatureUrl")}
+                  />
+                  <span className="text-3xl mb-2">🖊️</span>
+                  <span className="text-xs font-bold text-gray-700 block mb-1">{dict.signatureUpload} *</span>
+                  <span className="text-[10px] font-medium text-gray-400 tracking-wide">ডিজিটাল স্বাক্ষর সিলেক্ট করুন <br />(Click to upload signature scan)</span>
                 </div>
               )}
-              {errors.signatureUrl && <p className="text-[11px] font-bold text-red-500 mt-2">{errors.signatureUrl}</p>}
+              {errors.signatureUrl && <p className="text-[11px] font-bold text-red-500 mt-2 text-center">{errors.signatureUrl}</p>}
             </div>
 
             {/* NID File loader */}
-            <div className="border border-dashed border-gray-200 hover:border-[#E05A10]/50 p-5 rounded-2xl flex flex-col items-center justify-center text-center cursor-pointer relative bg-white transition-all md:col-span-2">
-              <label className="text-xs font-bold text-gray-700 cursor-pointer block mb-2">{dict.nidScan} *</label>
-              <input
-                type="file"
-                accept="image/*,application/pdf"
-                className="opacity-0 absolute inset-0 z-10 cursor-pointer"
-                onChange={(e) => handleFileChange(e, "nidScanUrl")}
-              />
+            <div className="md:col-span-2">
               {formData.nidScanUrl ? (
-                <p className="text-xs text-green-600 font-bold bg-green-50 px-3 py-1.5 rounded-full border border-green-200">
-                  ✔ NID / Birth Cert scans uploaded as secure document.
-                </p>
+                <div id="nidscan-loaded-container" className="border border-solid border-green-200 bg-green-50/20 p-6 rounded-2xl flex flex-col items-center justify-center text-center min-h-[160px]">
+                  <span className="text-xs font-bold text-green-700 mb-2 uppercase tracking-wide flex items-center gap-1">✔ {lang === "en" ? "Document Selected" : "দলিলপত্র যুক্ত হয়েছে"}</span>
+                  <div className="relative max-w-md w-full h-32 rounded overflow-hidden border border-green-300 shadow-sm mb-3 bg-white flex items-center justify-center p-1 mx-auto">
+                    <img src={formData.nidScanUrl} alt="NID Scan Preview" className="h-full object-contain" />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, nidScanUrl: "" }))}
+                    className="px-4 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 text-[10px] font-extrabold uppercase rounded-lg tracking-wider transition-colors cursor-pointer"
+                  >
+                    {lang === "en" ? "Remove / Clear Document" : "ডকুমেন্ট মুছে ফেলুন 🗑"}
+                  </button>
+                </div>
               ) : (
-                <div className="text-center py-1 text-gray-400">
-                  <span className="text-3xl block">📠</span>
-                  <span className="text-[10px] uppercase font-bold mt-2 block select-none">Click or drag & drop high resolution Scan copy of documents</span>
+                <div id="nidscan-picker-container" className="border border-dashed border-gray-200 hover:border-[#E05A10]/50 p-6 rounded-2xl flex flex-col items-center justify-center text-center bg-gray-50/50 hover:bg-orange-50/10 transition-all min-h-[160px] relative">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    id="nidscan-file-input"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    onChange={(e) => handleFileChange(e, "nidScanUrl")}
+                  />
+                  <span className="text-3xl mb-2">📠</span>
+                  <span className="text-xs font-bold text-gray-700 block mb-1">{dict.nidScan} *</span>
+                  <span className="text-[10px] font-medium text-gray-400 tracking-wide">এনআইডি বা জন্ম নিবন্ধন কাগজের ছবি দিন <br />(Click to select NID/Birth Certificate scan file)</span>
                 </div>
               )}
             </div>
