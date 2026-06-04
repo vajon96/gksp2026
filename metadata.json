@@ -1,0 +1,6 @@
+{
+  "name": "Hindu Religious Organization CMS",
+  "description": "A dynamic full-stack CMS for Hindu religious organizations featuring member registrations, PVC ID card auto-generation, notices, events, and dynamic webpage management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
