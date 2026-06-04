@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Application, Member, OrgSettings, Notice, Event, Donation, CustomPage, AdminLog } from "../types.ts";
 import { PVCIDCard } from "./PVCIDCard.tsx";
 
@@ -22,6 +22,7 @@ interface AdminPanelProps {
   onDeleteApplication: (appId: string) => Promise<void>;
   onToggleMemberStatus: (memberId: string, status: "active" | "suspended") => Promise<void>;
   onUpdateSettings: (settings: Partial<OrgSettings>) => Promise<void>;
+  onResetAllData?: () => Promise<void>;
   onAddNotice: (title: string, content: string, category: string) => Promise<void>;
   onDeleteNotice: (id: string) => Promise<void>;
   onAddEvent: (title: string, description: string, date: string, location: string, volunteerActive: boolean) => Promise<void>;
@@ -52,6 +53,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   onDeleteApplication,
   onToggleMemberStatus,
   onUpdateSettings,
+  onResetAllData,
   onAddNotice,
   onDeleteNotice,
   onAddEvent,
@@ -113,6 +115,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   // Settings modification states
   const [orgFormSettings, setOrgFormSettings] = useState({ ...settings });
+
+  useEffect(() => {
+    setOrgFormSettings({ ...settings });
+  }, [settings]);
 
   // Admin Change Password states
   const [oldPassword, setOldPassword] = useState("");
@@ -605,6 +611,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           >
                             Inspect 👁️
                           </button>
+                          <button
+                            onClick={async () => {
+                              if (confirm(`Are you sure you want to permanently delete application ${app.id} (${app.fullNameEnglish})?`)) {
+                                await onDeleteApplication(app.id);
+                                await onRefresh();
+                              }
+                            }}
+                            className="bg-red-50 hover:bg-red-100 text-red-650 text-[10px] font-bold px-3 py-1 rounded-lg uppercase cursor-pointer"
+                          >
+                            Delete 🗑️
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -736,6 +753,22 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             className="w-full py-2 bg-red-650 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider rounded-lg disabled:opacity-50 cursor-pointer"
                           >
                             Reject & Fire Rejection Alert
+                          </button>
+                        </div>
+                        <div className="md:col-span-2 border-t pt-4 flex justify-between items-center text-xs">
+                          <span className="text-gray-400 font-medium">Or discard/delete directly without saving:</span>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (confirm("Are you sure you want to permanently delete this pending application? This action is irreversible.")) {
+                                await onDeleteApplication(inspectApp.id);
+                                setInspectApp(null);
+                                await onRefresh();
+                              }
+                            }}
+                            className="px-4 py-2 bg-red-100 text-red-650 hover:bg-red-200 text-xs font-bold uppercase rounded-xl cursor-pointer"
+                          >
+                            Delete Application 🗑️
                           </button>
                         </div>
                       </>
@@ -1439,118 +1472,320 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           <div className="flex-1 overflow-y-auto space-y-8 pr-1">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Organization CMS Form */}
-              <form onSubmit={triggerUpdateSettings} className="lg:col-span-2 bg-white border p-8 rounded-3xl space-y-4 shadow-sm">
-                <h4 className="text-xs font-black uppercase tracking-wider text-[#800000] border-l-3 border-[#E05A10] pl-2 mb-2">Primary Organization Configuration Parameters</h4>
-                
-                <div className="grid grid-cols-2 gap-4 text-xs">
-                  <div>
-                    <label className={tLabelClass}>Organization Full Name</label>
-                    <input
-                      type="text"
-                      className={tFormClass}
-                      value={orgFormSettings.orgName}
-                      onChange={(e) => setOrgFormSettings({ ...orgFormSettings, orgName: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className={tLabelClass}>Short acronym name (ID prefix)</label>
-                    <input
-                      type="text"
-                      className={tFormClass}
-                      value={orgFormSettings.shortName}
-                      onChange={(e) => setOrgFormSettings({ ...orgFormSettings, shortName: e.target.value })}
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className={tLabelClass}>Core Logo Avatar URL Link</label>
-                    <input
-                      type="text"
-                      className={tFormClass}
-                      value={orgFormSettings.logoUrl}
-                      onChange={(e) => setOrgFormSettings({ ...orgFormSettings, logoUrl: e.target.value })}
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className={tLabelClass}>Home Slider Temple Banner URL Link</label>
-                    <input
-                      type="text"
-                      className={tFormClass}
-                      value={orgFormSettings.bannerUrl}
-                      onChange={(e) => setOrgFormSettings({ ...orgFormSettings, bannerUrl: e.target.value })}
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className={tLabelClass}>Theological Slogan / Moto Statement</label>
-                    <input
-                      type="text"
-                      className={tFormClass}
-                      value={orgFormSettings.slogan}
-                      onChange={(e) => setOrgFormSettings({ ...orgFormSettings, slogan: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className={tLabelClass}>Central President Coordinator</label>
-                    <input
-                      type="text"
-                      className={tFormClass}
-                      value={orgFormSettings.presidentName}
-                      onChange={(e) => setOrgFormSettings({ ...orgFormSettings, presidentName: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className={tLabelClass}>Central General Secretary</label>
-                    <input
-                      type="text"
-                      className={tFormClass}
-                      value={orgFormSettings.secretaryName}
-                      onChange={(e) => setOrgFormSettings({ ...orgFormSettings, secretaryName: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className={tLabelClass}>Offices Phone</label>
-                    <input
-                      type="tel"
-                      className={tFormClass}
-                      value={orgFormSettings.contactPhone}
-                      onChange={(e) => setOrgFormSettings({ ...orgFormSettings, contactPhone: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className={tLabelClass}>Offices Email</label>
-                    <input
-                      type="email"
-                      className={tFormClass}
-                      value={orgFormSettings.contactEmail}
-                      onChange={(e) => setOrgFormSettings({ ...orgFormSettings, contactEmail: e.target.value })}
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className={tLabelClass}>Registered Headquarters Address</label>
-                    <textarea
-                      rows={2}
-                      className={tFormClass}
-                      value={orgFormSettings.address}
-                      onChange={(e) => setOrgFormSettings({ ...orgFormSettings, address: e.target.value })}
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className={tLabelClass}>Comprehensive About paragraph</label>
-                    <textarea
-                      rows={3}
-                      className={tFormClass}
-                      value={orgFormSettings.about}
-                      onChange={(e) => setOrgFormSettings({ ...orgFormSettings, about: e.target.value })}
-                    />
+              <form onSubmit={triggerUpdateSettings} className="lg:col-span-2 bg-white border p-8 rounded-3xl space-y-6 shadow-sm">
+                <div className="flex flex-col gap-1 border-b pb-4 mb-4">
+                  <h4 className="text-sm font-black uppercase tracking-wider text-gray-900 flex items-center gap-2">
+                    🔱 Dynamic Organization Settings
+                  </h4>
+                  <p className="text-[11px] text-gray-500 font-sans">
+                    Update all parameters dynamically. Changes are immediately populated across all client views, ID Cards, Certificates, and portals.
+                  </p>
+                </div>
+
+                {/* SECTION 1: 🏢 BRANDING IDENTIFIERS */}
+                <div className="space-y-4">
+                  <h5 className="text-[10px] font-black uppercase tracking-widest text-[#800000] bg-amber-50/50 px-3 py-1.5 rounded-lg border border-amber-100 flex items-center gap-1.5">
+                    🏢 Section 1: Core Branding & Identity
+                  </h5>
+                  <div className="grid grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <label className={tLabelClass}>Organization Full Name</label>
+                      <input
+                        type="text"
+                        className={tFormClass}
+                        value={orgFormSettings.orgName || ""}
+                        onChange={(e) => setOrgFormSettings({ ...orgFormSettings, orgName: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className={tLabelClass}>Short acronym name (ID prefix)</label>
+                      <input
+                        type="text"
+                        className={tFormClass}
+                        value={orgFormSettings.shortName || ""}
+                        onChange={(e) => setOrgFormSettings({ ...orgFormSettings, shortName: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label className={tLabelClass}>Theological Slogan / Moto Statement</label>
+                      <input
+                        type="text"
+                        className={tFormClass}
+                        value={orgFormSettings.slogan || ""}
+                        onChange={(e) => setOrgFormSettings({ ...orgFormSettings, slogan: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label className={tLabelClass}>Core Logo Avatar URL Link</label>
+                      <input
+                        type="text"
+                        className={tFormClass}
+                        value={orgFormSettings.logoUrl || ""}
+                        onChange={(e) => setOrgFormSettings({ ...orgFormSettings, logoUrl: e.target.value })}
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label className={tLabelClass}>Favicon Icon URL Link</label>
+                      <input
+                        type="text"
+                        className={tFormClass}
+                        value={orgFormSettings.faviconUrl || ""}
+                        placeholder="e.g. https://domain.com/favicon.ico"
+                        onChange={(e) => setOrgFormSettings({ ...orgFormSettings, faviconUrl: e.target.value })}
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label className={tLabelClass}>Home Slider Temple Banner URL Link</label>
+                      <input
+                        type="text"
+                        className={tFormClass}
+                        value={orgFormSettings.bannerUrl || ""}
+                        onChange={(e) => setOrgFormSettings({ ...orgFormSettings, bannerUrl: e.target.value })}
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label className={tLabelClass}>Custom Background Wallpaper URL Link</label>
+                      <input
+                        type="text"
+                        className={tFormClass}
+                        value={orgFormSettings.bgImageUrl || ""}
+                        placeholder="e.g. Unsplash subtle pattern image URL"
+                        onChange={(e) => setOrgFormSettings({ ...orgFormSettings, bgImageUrl: e.target.value })}
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <button
-                  type="submit"
-                  className="w-full py-2.5 hover:opacity-90 text-white text-xs font-bold uppercase rounded-xl tracking-wide cursor-pointer flex items-center justify-center gap-1.5"
-                  style={{ backgroundColor: activeThemePrimary }}
-                >
-                  Save Global Org Parameters ✔
-                </button>
+                {/* SECTION 2: 🎨 THEME COLOR PALETTE */}
+                <div className="space-y-4 pt-2">
+                  <h5 className="text-[10px] font-black uppercase tracking-widest text-[#800000] bg-amber-50/50 px-3 py-1.5 rounded-lg border border-amber-100 flex items-center gap-1.5">
+                    🎨 Section 2: Universal Styling Palette
+                  </h5>
+                  <div className="grid grid-cols-3 gap-4 text-xs">
+                    <div>
+                      <label className={tLabelClass}>Primary Color (Saffron/Orange)</label>
+                      <div className="flex gap-2 items-center mt-1">
+                        <input
+                          type="color"
+                          className="w-10 h-10 rounded border cursor-pointer shrink-0"
+                          value={orgFormSettings.themePrimary || "#E05A10"}
+                          onChange={(e) => setOrgFormSettings({ ...orgFormSettings, themePrimary: e.target.value })}
+                        />
+                        <input
+                          type="text"
+                          className="w-full text-xs font-mono p-2.5 border rounded-xl"
+                          value={orgFormSettings.themePrimary || "#E05A10"}
+                          onChange={(e) => setOrgFormSettings({ ...orgFormSettings, themePrimary: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className={tLabelClass}>Secondary Color (Maroon/Navy)</label>
+                      <div className="flex gap-2 items-center mt-1">
+                        <input
+                          type="color"
+                          className="w-10 h-10 rounded border cursor-pointer shrink-0"
+                          value={orgFormSettings.themeSecondary || "#800000"}
+                          onChange={(e) => setOrgFormSettings({ ...orgFormSettings, themeSecondary: e.target.value })}
+                        />
+                        <input
+                          type="text"
+                          className="w-full text-xs font-mono p-2.5 border rounded-xl"
+                          value={orgFormSettings.themeSecondary || "#800000"}
+                          onChange={(e) => setOrgFormSettings({ ...orgFormSettings, themeSecondary: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className={tLabelClass}>Contrast Accent Gold Color</label>
+                      <div className="flex gap-2 items-center mt-1">
+                        <input
+                          type="color"
+                          className="w-10 h-10 rounded border cursor-pointer shrink-0"
+                          value={orgFormSettings.themeGold || "#D4AF37"}
+                          onChange={(e) => setOrgFormSettings({ ...orgFormSettings, themeGold: e.target.value })}
+                        />
+                        <input
+                          type="text"
+                          className="w-full text-xs font-mono p-2.5 border rounded-xl"
+                          value={orgFormSettings.themeGold || "#D4AF37"}
+                          onChange={(e) => setOrgFormSettings({ ...orgFormSettings, themeGold: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* SECTION 3: 📞 COMMUNICATIONS COORDINATION */}
+                <div className="space-y-4 pt-2">
+                  <h5 className="text-[10px] font-black uppercase tracking-widest text-[#800000] bg-amber-50/50 px-3 py-1.5 rounded-lg border border-amber-100 flex items-center gap-1.5">
+                    📞 Section 3: Communications & Contact Details
+                  </h5>
+                  <div className="grid grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <label className={tLabelClass}>Central Helpline Phone</label>
+                      <input
+                        type="tel"
+                        className={tFormClass}
+                        value={orgFormSettings.contactPhone || ""}
+                        onChange={(e) => setOrgFormSettings({ ...orgFormSettings, contactPhone: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className={tLabelClass}>Central Helpline Email</label>
+                      <input
+                        type="email"
+                        className={tFormClass}
+                        value={orgFormSettings.contactEmail || ""}
+                        onChange={(e) => setOrgFormSettings({ ...orgFormSettings, contactEmail: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label className={tLabelClass}>Registered headquarters physical Address</label>
+                      <textarea
+                        rows={2}
+                        className={tFormClass}
+                        value={orgFormSettings.address || ""}
+                        onChange={(e) => setOrgFormSettings({ ...orgFormSettings, address: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className={tLabelClass}>Facebook Official Fanpage Link</label>
+                      <input
+                        type="text"
+                        className={tFormClass}
+                        value={orgFormSettings.socialFacebook || ""}
+                        onChange={(e) => setOrgFormSettings({ ...orgFormSettings, socialFacebook: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className={tLabelClass}>Twitter / X Coordination Link</label>
+                      <input
+                        type="text"
+                        className={tFormClass}
+                        value={orgFormSettings.socialTwitter || ""}
+                        onChange={(e) => setOrgFormSettings({ ...orgFormSettings, socialTwitter: e.target.value })}
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label className={tLabelClass}>YouTube Channel Devotional Broadcast Link</label>
+                      <input
+                        type="text"
+                        className={tFormClass}
+                        value={orgFormSettings.socialYoutube || ""}
+                        onChange={(e) => setOrgFormSettings({ ...orgFormSettings, socialYoutube: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* SECTION 4: 🏛️ GOVERNING COUNCILS & LEADERS */}
+                <div className="space-y-4 pt-2">
+                  <h5 className="text-[10px] font-black uppercase tracking-widest text-[#800000] bg-amber-50/50 px-3 py-1.5 rounded-lg border border-amber-100 flex items-center gap-1.5">
+                    🏛️ Section 4: Lead Executive structure
+                  </h5>
+                  <div className="grid grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <label className={tLabelClass}>Governing President Coordinator Name</label>
+                      <input
+                        type="text"
+                        className={tFormClass}
+                        value={orgFormSettings.presidentName || ""}
+                        onChange={(e) => setOrgFormSettings({ ...orgFormSettings, presidentName: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className={tLabelClass}>General Secretary Name</label>
+                      <input
+                        type="text"
+                        className={tFormClass}
+                        value={orgFormSettings.secretaryName || ""}
+                        onChange={(e) => setOrgFormSettings({ ...orgFormSettings, secretaryName: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label className={tLabelClass}>Detailed Committee Structure, seats & terms (Supports newline)</label>
+                      <textarea
+                        rows={4}
+                        className={tFormClass}
+                        placeholder="e.g.
+Patron: His Holiness Swami Maharaj
+President: Dr. S. Mukhopadhyay
+General Secretary: S. Shastri
+Treasurer: Sri G. K. Roy"
+                        value={orgFormSettings.committeeInfo || ""}
+                        onChange={(e) => setOrgFormSettings({ ...orgFormSettings, committeeInfo: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* SECTION 5: 📜 PHILOSOPHY & FOOTERS */}
+                <div className="space-y-4 pt-2">
+                  <h5 className="text-[10px] font-black uppercase tracking-widest text-[#800000] bg-amber-50/50 px-3 py-1.5 rounded-lg border border-amber-100 flex items-center gap-1.5">
+                    📜 Section 5: Strategic Philosophy & Footer Signing
+                  </h5>
+                  <div className="grid grid-cols-2 gap-4 text-xs">
+                    <div className="col-span-2">
+                      <label className={tLabelClass}>Comprehensive About paragraph</label>
+                      <textarea
+                        rows={3}
+                        className={tFormClass}
+                        value={orgFormSettings.about || ""}
+                        onChange={(e) => setOrgFormSettings({ ...orgFormSettings, about: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className={tLabelClass}>Mission Statement</label>
+                      <textarea
+                        rows={3}
+                        className={tFormClass}
+                        value={orgFormSettings.mission || ""}
+                        onChange={(e) => setOrgFormSettings({ ...orgFormSettings, mission: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className={tLabelClass}>Vision Statement</label>
+                      <textarea
+                        rows={3}
+                        className={tFormClass}
+                        value={orgFormSettings.vision || ""}
+                        onChange={(e) => setOrgFormSettings({ ...orgFormSettings, vision: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label className={tLabelClass}>Global Footer Copyright Signature Text</label>
+                      <input
+                        type="text"
+                        className={tFormClass}
+                        value={orgFormSettings.footerText || ""}
+                        onChange={(e) => setOrgFormSettings({ ...orgFormSettings, footerText: e.target.value })}
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t">
+                  <button
+                    type="submit"
+                    className="w-full py-3 hover:opacity-95 text-white text-xs font-black uppercase rounded-xl tracking-wider cursor-pointer shadow-md flex items-center justify-center gap-2 transition-all"
+                    style={{ backgroundColor: activeThemePrimary }}
+                  >
+                    💾 Save Dynamic Organization Parameters ✔
+                  </button>
+                </div>
               </form>
 
               {/* Setup changes of passwords */}
@@ -1590,6 +1825,37 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   Change Admin Secret Key 🔒
                 </button>
               </form>
+
+              {/* System Reset Section */}
+              <div className="bg-red-50 border border-red-200 p-6 rounded-3xl h-fit shadow-sm space-y-4">
+                <h4 className="text-xs font-black uppercase tracking-wider text-red-800 border-l-3 border-red-600 pl-2 mb-2">⚠ সিস্টেম রিসেট এবং ডেটা ক্লিনআপ</h4>
+                <p className="text-[11px] text-red-700 leading-relaxed font-sans">
+                  <strong>সতর্কতা:</strong> এটি একটি খুবই সংবেদনশীল অপারেশন। এখানে ক্লিক করলে ডাটাবেস থেকে সকল মেম্বার এবং আবেদনকারী ক্যান্ডিডেটদের তালিকা স্থায়ীভাবে ডিলিট (মুছে) হয়ে যাবে।
+                </p>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (confirm("আপনি কি নিশ্চিত যে আপনি সকল মেম্বার এবং অ্যাপ্লিকেশন ডিলিট করতে চান? এই একশনটি আর ফিরে পাওয়া যাবে না।")) {
+                      if (confirm("চূড়ান্ত সতর্কতা: সকল মেম্বার এবং অ্যাপ্লিকেশন মুছে ফেলার সিদ্ধান্ত পুনরায় নিশ্চিত করুন!")) {
+                        try {
+                          if (onResetAllData) {
+                            await onResetAllData();
+                            await onRefresh();
+                            alert("সফলভাবে ডাটাবেস রিসেট করা হয়েছে এবং সমস্ত মেম্বার ও আবেদনকারীর ডাটা মুছে ফেলা হয়েছে।");
+                          } else {
+                            alert("রিসেট হ্যান্ডলার ক্লায়েন্টে কনফিগার করা নেই।");
+                          }
+                        } catch (err: any) {
+                          alert("রিসেট করতে ব্যর্থ হয়েছে: " + err.message);
+                        }
+                      }
+                    }
+                  }}
+                  className="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-black uppercase rounded-xl cursor-pointer shadow-sm transition-colors text-center block"
+                >
+                  সকল অ্যাপ্লিকেশন ও মেম্বার ডিলিট করুন 🗑️
+                </button>
+              </div>
             </div>
           </div>
         )}

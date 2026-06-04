@@ -495,6 +495,16 @@ async function bootstrap() {
     res.json({ success: true });
   });
 
+  // Reset and Delete all Applications and Members datasets
+  app.post("/api/admin/reset-data", verifyAdmin, (req: Request, res: Response) => {
+    const database = db.get();
+    database.applications = [];
+    database.members = [];
+    db.save(database);
+    addLog("superadmin", `Completely reset/deleted all applications and member profiles from the system database.`, req);
+    res.json({ success: true, message: "All applications and member parameters have been successfully reset." });
+  });
+
   // Edit applicant profile (Emergency / spelling correction)
   app.post("/api/admin/edit-application", verifyAdmin, (req: Request, res: Response) => {
     const { id, updatedFields } = req.body;

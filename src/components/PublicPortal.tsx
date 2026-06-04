@@ -287,7 +287,19 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
         </div>
       </nav>
 
-      <div className="flex-1 p-6 md:p-10 bg-[#fcf9f5]">
+      <div 
+        className="flex-1 p-6 md:p-10 transition-all duration-300" 
+        style={
+          settings.bgImageUrl 
+            ? { 
+                backgroundImage: `linear-gradient(rgba(252, 249, 245, 0.93), rgba(252, 249, 245, 0.93)), url(${settings.bgImageUrl})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundAttachment: 'fixed',
+              } 
+            : { backgroundColor: "#fcf9f5" }
+        }
+      >
         {/* TAB 1: PORTAL HOME */}
         {activeTab === "home" && (
           <div className="space-y-12">
@@ -399,6 +411,17 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
                     </p>
                   </div>
                 </div>
+
+                {settings.committeeInfo && (
+                  <div className="mt-6 p-6 rounded-2xl border border-gray-100 bg-amber-50/20 shadow-[inset_0_1px_3px_rgba(0,0,0,0.02)] space-y-3 transition-all duration-350">
+                    <h4 className="text-xs font-black uppercase tracking-wider text-gray-800 flex items-center gap-2 border-b border-orange-100/60 pb-3">
+                      🔱 {lang === "en" ? "Governing Committee Structure" : "পরিচালনা কমিটির তথ্য"}
+                    </h4>
+                    <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-line font-sans pl-1">
+                      {settings.committeeInfo}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Leaders Cabinet Panel */}

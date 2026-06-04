@@ -24,6 +24,9 @@ export interface OrgSettings {
   socialFacebook: string;
   socialTwitter: string;
   socialYoutube: string;
+  faviconUrl?: string;
+  bgImageUrl?: string;
+  committeeInfo?: string;
 }
 
 export interface Application {

@@ -94,6 +94,26 @@ export default function App() {
     }
   }, [adminToken]);
 
+  // Dynamically synchronize favicon elements and tab metadata attributes with latest settings
+  useEffect(() => {
+    if (settings) {
+      if (settings.orgName) {
+        document.title = settings.orgName + (settings.slogan ? ` - ${settings.slogan}` : "");
+      }
+      if (settings.faviconUrl) {
+        const link: HTMLLinkElement | null = document.querySelector("link[rel*='icon']");
+        if (link) {
+          link.href = settings.faviconUrl;
+        } else {
+          const newLink = document.createElement("link");
+          newLink.rel = "icon";
+          newLink.href = settings.faviconUrl;
+          document.head.appendChild(newLink);
+        }
+      }
+    }
+  }, [settings]);
+
   // Handle Multi-role Logins
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -262,6 +282,14 @@ export default function App() {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${adminToken}` },
       body: JSON.stringify(updatedSettings)
+    });
+    if (!res.ok) throw new Error((await res.json()).message);
+  };
+
+  const triggerResetAllData = async () => {
+    const res = await fetch("/api/admin/reset-data", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${adminToken}` }
     });
     if (!res.ok) throw new Error((await res.json()).message);
   };
@@ -568,6 +596,7 @@ export default function App() {
             onDeleteApplication={triggerDeleteApplication}
             onToggleMemberStatus={triggerToggleMemberStatus}
             onUpdateSettings={triggerUpdateBrandingSettings}
+            onResetAllData={triggerResetAllData}
             onAddNotice={triggerAddNotice}
             onDeleteNotice={triggerDeleteNotice}
             onAddEvent={triggerAddEvent}
@@ -687,7 +716,7 @@ export default function App() {
 
       {/* FOOTER COOPERATIVE PANEL */}
       <footer className="bg-white border-t border-gray-100 py-6 text-center text-[10px] text-gray-400 uppercase tracking-widest select-none mt-auto">
-        <p>© 2026 {settings.orgName}. All Sacred Rights Reserved.</p>
+        <p>{settings.footerText || `© 2026 ${settings.orgName}. All Sacred Rights Reserved.`}</p>
         <p className="mt-1 text-gray-300 font-bold">Consolidated by Sri Sanatana Relational CMS Infrastructure Engine</p>
       </footer>
     </div>
