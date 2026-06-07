@@ -789,10 +789,6 @@ export default function App() {
                     className="w-full text-center px-4 py-3 bg-gray-50 border border-gray-150 focus:border-orange-600 focus:bg-white text-sm font-bold rounded-xl outline-hidden tracking-widest text-orange-950 transition-all font-sans"
                     autoFocus
                   />
-                  <div className="text-[9.5px] text-gray-400 space-y-0.5 leading-relaxed bg-gray-50 p-2.5 rounded-lg border border-gray-100 font-mono">
-                    💡 Default test secret is:<br />
-                    <span className="font-bold text-orange-600 select-all">Admin@2026#SecurePanel</span>
-                  </div>
                 </div>
               ) : (
                 <div className="space-y-3">
