@@ -528,6 +528,15 @@ export default function App() {
           >
             🕊️ ওয়েব পোর্টাল (Web Portal)
           </button>
+
+          <button
+            onClick={() => setPanelWrapper("apply")}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+              panelWrapper === "apply" ? "bg-orange-50 text-orange-950 shadow-inner" : "text-gray-400 hover:text-gray-700"
+            }`}
+          >
+            📝 {lang === "en" ? "Apply" : "সদস্যপদ আবেদন"}
+          </button>
           
           {memberToken && activeMember ? (
             <div className="flex items-center gap-2">
