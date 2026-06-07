@@ -1,6 +1,6 @@
 {
-  "name": "Hindu Religious Organization CMS",
-  "description": "A dynamic full-stack CMS for Hindu religious organizations featuring member registrations, PVC ID card auto-generation, notices, events, and dynamic webpage management.",
+  "name": "Ganoraj Ekata Sangha CMS",
+  "description": "An advanced full-stack CMS and Dynamic certificate management system for Ganoraj Ekata Sangha with bulk generation, A4 landscape templates, live Bangla editor, events organization, and QR verification portal.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

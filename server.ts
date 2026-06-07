@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { db } from "./server_db_store.ts";
-import { Application, Member, OrgSettings, Notice, Event, Donation, CustomPage } from "./src/types.ts";
+import { Application, Member, OrgSettings, Notice, Event, Donation, CustomPage, Certificate } from "./src/types.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,18 +19,18 @@ async function bootstrap() {
 
   // Auto-initialize the requested Super Administrative Secret Key
   const databaseOnBoot = db.get();
-  const NEW_ADMIN_SECRET = "DharmaSeva@2026#SecureAdmin";
+  const NEW_ADMIN_SECRET = "Admin@2026#SecurePanel";
   const newHash = db.hash(NEW_ADMIN_SECRET);
-  if (databaseOnBoot.adminPasswordHash !== newHash) {
+  if (databaseOnBoot.adminPasswordHash !== newHash && !databaseOnBoot.isAdminPasswordChanged) {
     databaseOnBoot.adminPasswordHash = newHash;
-    databaseOnBoot.isAdminPasswordChanged = true;
+    databaseOnBoot.isAdminPasswordChanged = false;
     
     // Add audit trail for transparency
     databaseOnBoot.adminLogs.unshift({
       id: "LOG-KEY-" + Date.now(),
       timestamp: new Date().toISOString(),
       username: "system",
-      action: "A new Super Administrative Secret Key has been generated and set: DharmaSeva@2026#SecureAdmin",
+      action: "A new Super Administrative Secret Key has been generated and set: Admin@2026#SecurePanel",
       ip: "127.0.0.1"
     });
     db.save(databaseOnBoot);
@@ -311,7 +311,8 @@ async function bootstrap() {
       donations: d.donations,
       customPages: d.customPages,
       logs: d.adminLogs,
-      visitorCount: d.visitorCount
+      visitorCount: d.visitorCount,
+      certificates: d.certificates || []
     });
   });
 
@@ -326,7 +327,8 @@ async function bootstrap() {
       donations: d.donations,
       customPages: d.customPages,
       logs: d.adminLogs,
-      visitorCount: d.visitorCount
+      visitorCount: d.visitorCount,
+      certificates: d.certificates || []
     });
   });
 
@@ -469,7 +471,7 @@ async function bootstrap() {
 
   // Delete Application (Older POST format)
   app.post("/api/admin/delete-application", verifyAdmin, (req: Request, res: Response) => {
-    const { applicationId } = req.body;
+    const applicationId = req.body.applicationId || req.body.id;
     const database = db.get();
 
     // Remove application and any associated approved member profile
@@ -503,6 +505,108 @@ async function bootstrap() {
     db.save(database);
     addLog("superadmin", `Completely reset/deleted all applications and member profiles from the system database.`, req);
     res.json({ success: true, message: "All applications and member parameters have been successfully reset." });
+  });
+
+  // Delete Everything (Danger Zone: completely wipes the database)
+  app.post("/api/admin/delete-everything", verifyAdmin, (req: Request, res: Response) => {
+    const database = db.get();
+    database.applications = [];
+    database.members = [];
+    database.notices = [];
+    database.events = [];
+    database.donations = [];
+    database.customPages = [];
+    database.certificates = [];
+    database.visitorCount = 0;
+    database.adminLogs = [];
+    
+    db.save(database);
+    addLog("superadmin", `TRIGGERED FULL SYSTEM RESET WIPE IN DANGER ZONE. Erased events, campaigns, certificates, applications, notices, logs, and custom pages.`, req);
+    res.json({ success: true, message: "Entire dynamic CMS database has been successfully cleared and initialized." });
+  });
+
+  // Bulk Delete Certificates
+  app.post("/api/admin/bulk-delete-certificates", verifyAdmin, (req: Request, res: Response) => {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids)) {
+      return res.status(400).json({ error: "Invalid parameters" });
+    }
+    const database = db.get();
+    database.certificates = (database.certificates || []).filter(c => !ids.includes(c.id));
+    db.save(database);
+    addLog("superadmin", `Bulk deleted ${ids.length} certificates.`, req);
+    res.json({ success: true, message: `Successfully bulk deleted ${ids.length} certificates.` });
+  });
+
+  // Bulk Delete Notices
+  app.post("/api/admin/bulk-delete-notices", verifyAdmin, (req: Request, res: Response) => {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids)) {
+      return res.status(400).json({ error: "Invalid parameters" });
+    }
+    const database = db.get();
+    database.notices = database.notices.filter(n => !ids.includes(n.id));
+    db.save(database);
+    addLog("superadmin", `Bulk deleted ${ids.length} notices.`, req);
+    res.json({ success: true, message: `Successfully bulk deleted ${ids.length} notices.` });
+  });
+
+  // Bulk Delete Events
+  app.post("/api/admin/bulk-delete-events", verifyAdmin, (req: Request, res: Response) => {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids)) {
+      return res.status(400).json({ error: "Invalid parameters" });
+    }
+    const database = db.get();
+    database.events = database.events.filter(e => !ids.includes(e.id));
+    db.save(database);
+    addLog("superadmin", `Bulk deleted ${ids.length} events/campaigns.`, req);
+    res.json({ success: true, message: `Successfully bulk deleted ${ids.length} events.` });
+  });
+
+  // Bulk Delete Applications
+  app.post("/api/admin/bulk-delete-applications", verifyAdmin, (req: Request, res: Response) => {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids)) {
+      return res.status(400).json({ error: "Invalid parameters" });
+    }
+    const database = db.get();
+    database.applications = database.applications.filter(a => !ids.includes(a.id));
+    database.members = database.members.filter(m => !ids.includes(m.applicationId));
+    db.save(database);
+    addLog("superadmin", `Bulk deleted ${ids.length} applications and active memberships.`, req);
+    res.json({ success: true, message: `Successfully bulk deleted ${ids.length} applications with linked members.` });
+  });
+
+  // Toggle Pin Notice
+  app.post("/api/admin/toggle-pin-notice", verifyAdmin, (req: Request, res: Response) => {
+    const { id, isPinned } = req.body;
+    const database = db.get();
+    const notice = database.notices.find(n => n.id === id);
+    if (!notice) {
+      return res.status(404).json({ error: "Notice element not found" });
+    }
+    notice.isPinned = !!isPinned;
+    db.save(database);
+    addLog("superadmin", `Toggled pin option of notice ID ${id} to ${notice.isPinned}`, req);
+    res.json({ success: true, notice });
+  });
+
+  // Update Notice
+  app.post("/api/admin/update-notice", verifyAdmin, (req: Request, res: Response) => {
+    const { id, title, content, category, isPinned } = req.body;
+    const database = db.get();
+    const notice = database.notices.find(n => n.id === id);
+    if (!notice) {
+      return res.status(404).json({ error: "Notice target not found" });
+    }
+    if (title !== undefined) notice.title = title;
+    if (content !== undefined) notice.content = content;
+    if (category !== undefined) notice.category = category;
+    if (isPinned !== undefined) notice.isPinned = !!isPinned;
+    db.save(database);
+    addLog("superadmin", `Updated Notice ID ${id} ("${notice.title}") successfully.`, req);
+    res.json({ success: true, notice });
   });
 
   // Edit applicant profile (Emergency / spelling correction)
@@ -599,15 +703,207 @@ async function bootstrap() {
       description: req.body.description,
       date: req.body.date,
       location: req.body.location,
-      status: "upcoming",
+      status: req.body.status || "upcoming",
       volunteerRegistrationActive: req.body.volunteerRegistrationActive || false,
-      volunteers: []
+      volunteers: [],
+      category: req.body.category || "general",
+      organizerName: req.body.organizerName || database.settings.orgName,
+      bannerUrl: req.body.bannerUrl || "https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=1200&q=80",
+      logoUrl: req.body.logoUrl || database.settings.logoUrl || ""
     };
 
     database.events.unshift(newEvent);
     db.save(database);
-    addLog("superadmin", `Created database record for celestial event: "${req.body.title}"`, req);
+    addLog("superadmin", `Created database record for event: "${req.body.title}"`, req);
     res.json({ success: true, event: newEvent });
+  });
+
+  // Update Event
+  app.post("/api/admin/update-event", verifyAdmin, (req: Request, res: Response) => {
+    const database = db.get();
+    const { id, title, description, date, location, status, volunteerRegistrationActive, category, organizerName, bannerUrl, logoUrl } = req.body;
+    const eventIndex = database.events.findIndex(e => e.id === id);
+    if (eventIndex === -1) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+
+    database.events[eventIndex] = {
+      ...database.events[eventIndex],
+      title: title || database.events[eventIndex].title,
+      description: description || database.events[eventIndex].description,
+      date: date || database.events[eventIndex].date,
+      location: location || database.events[eventIndex].location,
+      status: status || database.events[eventIndex].status,
+      volunteerRegistrationActive: volunteerRegistrationActive !== undefined ? volunteerRegistrationActive : database.events[eventIndex].volunteerRegistrationActive,
+      category: category || database.events[eventIndex].category,
+      organizerName: organizerName || database.events[eventIndex].organizerName,
+      bannerUrl: bannerUrl || database.events[eventIndex].bannerUrl,
+      logoUrl: logoUrl || database.events[eventIndex].logoUrl
+    };
+
+    db.save(database);
+    addLog("superadmin", `Updated event: "${req.body.title}"`, req);
+    res.json({ success: true, event: database.events[eventIndex] });
+  });
+
+  // Get Certificates
+  app.get("/api/admin/certificates", verifyAdmin, (req: Request, res: Response) => {
+    const database = db.get();
+    res.json({ success: true, certificates: database.certificates || [] });
+  });
+
+  // Create Certificate
+  app.post("/api/admin/add-certificate", verifyAdmin, (req: Request, res: Response) => {
+    const database = db.get();
+    if (!database.certificates) database.certificates = [];
+    
+    // Auto increment sequential ID
+    const lastIdNum = database.certificates.reduce((max, c) => {
+      const num = parseInt(c.id.replace("CERT-", ""), 10);
+      return isNaN(num) ? max : (num > max ? num : max);
+    }, 1000);
+
+    const nextId = `CERT-${lastIdNum + 1}`;
+    const uuid = "GR-" + Math.random().toString(36).substr(2, 9).toUpperCase();
+
+    const newCert: Certificate = {
+      id: nextId,
+      uuid,
+      eventId: req.body.eventId,
+      recipientName: req.body.recipientName || "Anonymous Participant",
+      status: req.body.status || "active",
+      templateStyle: req.body.templateStyle || "gold",
+      titleText: req.body.titleText || "সনদপত্র",
+      subtitleText: req.body.subtitleText || "সফলতার স্বীকৃতিস্বরূপ",
+      mainBodyText: req.body.mainBodyText || "",
+      signatureText: req.body.signatureText || "সভাপতি",
+      sealText: req.body.sealText || "অফিসিয়াল সিল",
+      issueDate: req.body.issueDate || new Date().toISOString().split("T")[0],
+      primaryColor: req.body.primaryColor,
+      secondaryColor: req.body.secondaryColor
+    };
+
+    database.certificates.unshift(newCert);
+    db.save(database);
+    addLog("superadmin", `Generated certificate ${newCert.id} for "${newCert.recipientName}"`, req);
+    res.json({ success: true, certificate: newCert });
+  });
+
+  // Bulk Create Certificates
+  app.post("/api/admin/bulk-add-certificates", verifyAdmin, (req: Request, res: Response) => {
+    const database = db.get();
+    if (!database.certificates) database.certificates = [];
+    const certsIn: any[] = req.body.certificates || [];
+    const added: Certificate[] = [];
+
+    let lastIdNum = database.certificates.reduce((max, c) => {
+      const num = parseInt(c.id.replace("CERT-", ""), 10);
+      return isNaN(num) ? max : (num > max ? num : max);
+    }, 1000);
+
+    certsIn.forEach((c) => {
+      lastIdNum++;
+      const id = `CERT-${lastIdNum}`;
+      const uuid = "GR-" + Math.random().toString(36).substr(2, 9).toUpperCase();
+      const newCert: Certificate = {
+        id,
+        uuid,
+        eventId: c.eventId,
+        recipientName: c.recipientName,
+        status: "active",
+        templateStyle: c.templateStyle || "gold",
+        titleText: c.titleText || "সনদপত্র",
+        subtitleText: c.subtitleText || "সফলতার স্বীকৃতিস্বরূপ",
+        mainBodyText: c.mainBodyText || "",
+        signatureText: c.signatureText || "সভাপতি",
+        sealText: c.sealText || "অফিসিয়াল সিল",
+        issueDate: c.issueDate || new Date().toISOString().split("T")[0],
+        primaryColor: c.primaryColor,
+        secondaryColor: c.secondaryColor
+      };
+      database.certificates!.unshift(newCert);
+      added.push(newCert);
+    });
+
+    db.save(database);
+    addLog("superadmin", `Bulk generated ${added.length} event certificates successfully`, req);
+    res.json({ success: true, certificates: added });
+  });
+
+  // Update Certificate
+  app.post("/api/admin/update-certificate", verifyAdmin, (req: Request, res: Response) => {
+    const database = db.get();
+    if (!database.certificates) database.certificates = [];
+    const { id, recipientName, eventId, status, templateStyle, titleText, subtitleText, mainBodyText, signatureText, sealText, issueDate, primaryColor, secondaryColor } = req.body;
+    
+    const certIndex = database.certificates.findIndex(c => c.id === id);
+    if (certIndex === -1) {
+      return res.status(404).json({ error: "Certificate record not found" });
+    }
+
+    database.certificates[certIndex] = {
+      ...database.certificates[certIndex],
+      recipientName: recipientName || database.certificates[certIndex].recipientName,
+      eventId: eventId || database.certificates[certIndex].eventId,
+      status: status || database.certificates[certIndex].status,
+      templateStyle: templateStyle || database.certificates[certIndex].templateStyle,
+      titleText: titleText || database.certificates[certIndex].titleText,
+      subtitleText: subtitleText || database.certificates[certIndex].subtitleText,
+      mainBodyText: mainBodyText || database.certificates[certIndex].mainBodyText,
+      signatureText: signatureText || database.certificates[certIndex].signatureText,
+      sealText: sealText || database.certificates[certIndex].sealText,
+      issueDate: issueDate || database.certificates[certIndex].issueDate,
+      primaryColor: primaryColor || database.certificates[certIndex].primaryColor,
+      secondaryColor: secondaryColor || database.certificates[certIndex].secondaryColor
+    };
+
+    db.save(database);
+    addLog("superadmin", `Updated Certificate information for ID "${id}"`, req);
+    res.json({ success: true, certificate: database.certificates[certIndex] });
+  });
+
+  // Delete Certificate
+  app.delete("/api/admin/delete-certificate/:id", verifyAdmin, (req: Request, res: Response) => {
+    const { id } = req.params;
+    const database = db.get();
+    if (!database.certificates) database.certificates = [];
+    database.certificates = database.certificates.filter(c => c.id !== id);
+    db.save(database);
+    addLog("superadmin", `Deleted certificate ID "${id}" from records`, req);
+    res.json({ success: true });
+  });
+
+  // Verify Certificate via QR (Public)
+  app.get("/api/verify-certificate/:uuid", (req: Request, res: Response) => {
+    const database = db.get();
+    const certs = database.certificates || [];
+    const uuidClean = req.params.uuid.trim().toUpperCase();
+    
+    // Match either uuid or id
+    const cert = certs.find(c => c.uuid.toUpperCase() === uuidClean || c.id.toUpperCase() === uuidClean);
+    if (!cert) {
+      return res.status(404).json({ verified: false, message: "সার্টিফিকেট তথ্য খুঁজে পাওয়া যায়নি বা এটি বাতিল করা হয়েছে।" });
+    }
+
+    const event = database.events.find(e => e.id === cert.eventId);
+
+    res.json({
+      verified: true,
+      id: cert.id,
+      uuid: cert.uuid,
+      recipientName: cert.recipientName,
+      eventTitle: event ? event.title : "বিশেষ ইভেন্ট",
+      eventCategory: event ? event.category : "অন্যান্য",
+      eventLocation: event ? event.location : "ঢাকা, বাংলাদেশ",
+      orgName: database.settings.orgName,
+      slogan: database.settings.slogan,
+      issueDate: cert.issueDate,
+      category: event ? event.category : "অন্যান্য",
+      status: cert.status,
+      titleText: cert.titleText,
+      subtitleText: cert.subtitleText,
+      mainBodyText: cert.mainBodyText
+    });
   });
 
   // Register Volunteer for active Event
@@ -681,6 +977,49 @@ async function bootstrap() {
 
     db.save(database);
     return res.json({ success: true, message: "Profile updated successfully!" });
+  });
+
+  // Fetch applicant profile and application details for member cabinet
+  app.get("/api/member/profile", (req: Request, res: Response) => {
+    let token = req.headers["authorization"] || (req.query.token as string) || "";
+    if (token.startsWith("Bearer ")) {
+      token = token.slice(7);
+    }
+    if (!token || !token.startsWith("MEMBER-SESSION-TOKEN-")) {
+      return res.status(401).json({ success: false, message: "Unauthorized member access." });
+    }
+
+    const memberId = token.replace("MEMBER-SESSION-TOKEN-", "");
+    const database = db.get();
+    const member = database.members.find(m => m.memberId === memberId);
+    if (!member) {
+      return res.status(404).json({ success: false, message: "Member record not found." });
+    }
+
+    const application = database.applications.find(a => a.id === member.applicationId);
+    if (!application) {
+      return res.status(404).json({ success: false, message: "Associated application details not found." });
+    }
+
+    res.json({
+      success: true,
+      member,
+      application
+    });
+  });
+
+  // Delete Custom HTML Webpage Static Page
+  app.delete("/api/admin/delete-custom-page/:id", verifyAdmin, (req: Request, res: Response) => {
+    const { id } = req.params;
+    const database = db.get();
+    const page = database.customPages.find(p => p.id === id);
+    if (!page) {
+      return res.status(404).json({ error: "Custom static page not found" });
+    }
+    database.customPages = database.customPages.filter(p => p.id !== id);
+    db.save(database);
+    addLog("superadmin", `Deleted custom webpage static page: "${page.title}" with slug "/custom-page/${page.slug}"`, req);
+    res.json({ success: true, message: "Custom static page deleted successfully." });
   });
 
   // Delete Event Record (Older format)

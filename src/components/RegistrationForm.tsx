@@ -44,6 +44,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSubmit, la
     signatureUrl: "",
     nidScanUrl: "",
     additionalDocsUrl: "",
+    appliedRank: "সাধারণ সদস্য",
     declaration: false,
   });
 
@@ -151,14 +152,63 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSubmit, la
     },
   }[lang];
 
-  // Secure File to Base64 reader for offline/sandbox durability
+  // Secure File to Base64 reader with automatic canvas image-compression & type/size checks
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Validate MIME types (JPEG, JPG, PNG)
+    const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
+    if (!allowedTypes.includes(file.type)) {
+      alert(lang === "en" 
+        ? "Only JPEG/PNG image files are permitted." 
+        : "শুধুমাত্র JPG অথবা PNG ফরমেটের ছবি আপলোড করতে পারবেন।");
+      return;
+    }
+
+    // 2MB size limit enforcement
+    if (file.size > 2 * 1024 * 1024) {
+      alert(lang === "en"
+        ? "The selected file exceeds the 2MB security limit."
+        : "ফাইলের আকার ২ মেগাবাইট (2MB) এর বেশি হতে পারবে না।");
+      return;
+    }
+
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setFormData((prev) => ({ ...prev, [fieldName]: reader.result as string }));
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        // High-Quality Canvas Downscaling
+        const canvas = document.createElement("canvas");
+        const MAX_WIDTH = 800;
+        const MAX_HEIGHT = 800;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.75); // 75% quality
+          setFormData((prev) => ({ ...prev, [fieldName]: compressedDataUrl }));
+        } else {
+          setFormData((prev) => ({ ...prev, [fieldName]: event.target?.result as string }));
+        }
+      };
+      img.src = event.target?.result as string;
     };
     reader.readAsDataURL(file);
   };
@@ -274,6 +324,30 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSubmit, la
             {dict.personalInfo}
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="md:col-span-2 bg-orange-50/20 border border-orange-100 p-4 rounded-2xl">
+              <label className="text-xs font-black uppercase tracking-wider mb-1.5 block text-orange-950">
+                {lang === "en" ? "Select Applied Position/Rank *" : "আবেদনকৃত স্থায়ী পদবী / পদ নির্বাচন করুন *"}
+              </label>
+              <select
+                className="w-full rounded-lg border border-orange-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-800 focus:border-[#E05A10] focus:ring-1 focus:ring-[#E05A10]/30 transition-all outline-none"
+                value={formData.appliedRank}
+                onChange={(e) => setFormData({ ...formData, appliedRank: e.target.value })}
+              >
+                <option value="সভাপতি">{lang === "en" ? "President (সভাপতি)" : "সভাপতি"}</option>
+                <option value="সহ-সভাপতি">{lang === "en" ? "Vice President (সহ-সভাপতি)" : "সহ-সভাপতি"}</option>
+                <option value="সাধারণ সম্পাদক">{lang === "en" ? "General Secretary (সাধারণ সম্পাদক)" : "সাধারণ সম্পাদক"}</option>
+                <option value="সহ-সাধারণ সম্পাদক">{lang === "en" ? "Assistant General Secretary (সহ-সাধারণ সম্পাদক)" : "সহ-সাধারণ সম্পাদক"}</option>
+                <option value="সাংগঠনিক সম্পাদক">{lang === "en" ? "Organizing Secretary (সাংগঠনিক সম্পাদক)" : "সাংগঠনিক সম্পাদক"}</option>
+                <option value="সহ-সাংগঠনিক সম্পাদক">{lang === "en" ? "Assistant Organizing Secretary (সহ-সাংগঠনিক সম্পাদক)" : "সহ-সাংগঠনিক সম্পাদক"}</option>
+                <option value="প্রচার সম্পাদক">{lang === "en" ? "Publicity Secretary (প্রচার সম্পাদক)" : "প্রচার সম্পাদক"}</option>
+                <option value="সহ-প্রচার সম্পাদক">{lang === "en" ? "Assistant Publicity Secretary (সহ-প্রচার সম্পাদক)" : "সহ-প্রচার সম্পাদক"}</option>
+                <option value="অর্থ সম্পাদক">{lang === "en" ? "Treasurer / Finance Secretary (অর্থ সম্পাদক)" : "অর্থ সম্পাদক"}</option>
+                <option value="মন্ডপ পরিচালক">{lang === "en" ? "Mandap Director (মন্ডপ পরিচালক)" : "মন্ডপ পরিচালক"}</option>
+                <option value="আহ্বায়ক">{lang === "en" ? "Convener (আহ্বায়ক)" : "আহ্বায়ক"}</option>
+                <option value="সাধারণ সদস্য">{lang === "en" ? "General Member (সাধারণ সদস্য)" : "সাধারণ সদস্য"}</option>
+              </select>
+            </div>
+
             <div>
               <label className={textClass}>{dict.fullNameEnglish} *</label>
               <input

@@ -12,6 +12,9 @@ export interface OrgSettings {
   vision: string;
   presidentName: string;
   secretaryName: string;
+  presidentPhotoUrl?: string;
+  vicePresidentName?: string;
+  vicePresidentPhotoUrl?: string;
   address: string;
   contactPhone: string;
   contactEmail: string;
@@ -84,6 +87,8 @@ export interface Application {
   nidScanUrl: string; // Base64 or local URL
   additionalDocsUrl?: string; // Base64 or local URL
 
+  appliedRank?: string; // Applied position/rank (e.g., সভাপতি, সহ-সভাপতি)
+
   declaration: boolean;
 }
 
@@ -106,6 +111,7 @@ export interface Notice {
   date: string;
   category: string; // general, festival, administrative
   attachmentUrl?: string;
+  isPinned?: boolean;
 }
 
 export interface Event {
@@ -117,6 +123,27 @@ export interface Event {
   status: 'upcoming' | 'completed';
   volunteerRegistrationActive: boolean;
   volunteers: string[]; // member IDs registered
+  category: string; // e.g. cultural, general, relief, etc.
+  organizerName?: string;
+  bannerUrl?: string;
+  logoUrl?: string;
+}
+
+export interface Certificate {
+  id: string; // e.g. CERT-2026-0001
+  uuid: string; // Verification code
+  eventId: string; // Associated Event
+  recipientName: string;
+  status: string;
+  templateStyle: string;
+  titleText: string;
+  subtitleText: string;
+  mainBodyText: string;
+  signatureText: string;
+  sealText: string;
+  issueDate: string;
+  primaryColor?: string;
+  secondaryColor?: string;
 }
 
 export interface Donation {
@@ -161,4 +188,5 @@ export interface DBStructure {
   visitorCount: number;
   adminPasswordHash: string; // SHA-256 or bcrypt salt
   isAdminPasswordChanged: boolean;
+  certificates?: Certificate[];
 }
