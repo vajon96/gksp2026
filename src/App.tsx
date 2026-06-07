@@ -6,6 +6,32 @@ import { RegistrationForm } from "./components/RegistrationForm.tsx";
 import { MemberCabinet } from "./components/MemberCabinet.tsx";
 import { Award, Lock, ShieldCheck, RefreshCw, LogOut } from "lucide-react";
 
+const DEFAULT_SETTINGS: OrgSettings = {
+  orgName: "গণরাজ একতা সংঘ",
+  shortName: "গণরাজ",
+  slogan: "২৬শে আমাদের প্রথম প্রয়াস",
+  about: "গণরাজ একতা সংঘ সামাজিক উন্নয়ন, যুব কল্যাণ, এবং সৌহার্দ্যপূর্ণ সমাজ গঠনে নিবেদিত একটি স্বেচ্ছাসেবী সংগঠন। ২৬শে ডিসেম্বর থেকে শুরু হওয়া আমাদের প্রথম প্রয়াসের মাধ্যমে আমরা তরুণ সমাজকে প্রশিক্ষিত, সচেতন এবং মানবিক কার্যক্রমে সম্পৃক্ত করতে কাজ করে যাচ্ছি।",
+  mission: "তরুণদের সৃজনশীল এবং দায়িত্বশীল নাগরিক হিসেবে গড়ে তোলা, আর্তমানবতার সেবায় এগিয়ে আসা এবং ঐক্যবদ্ধ সমাজ গঠন করা।",
+  vision: "একটি দক্ষ, সচেতন এবং মানবিক মূল্যবোধসম্পন্ন যুবসমাজ গঠন যারা উন্নত সমাজ বিনির্মাণে নেতৃত্ব দেবে।",
+  presidentName: "সভাপতি (গণরাজ একতা সংঘ)",
+  presidentPhotoUrl: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=200&q=80",
+  vicePresidentName: "সহ-সভাপতি (গণরাজ একতা সংঘ)",
+  vicePresidentPhotoUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80",
+  secretaryName: "সাধারণ সম্পাদক (গণরাজ একতা সংঘ)",
+  address: "ঢাকা, বাংলাদেশ",
+  contactPhone: "+8801700000000",
+  contactEmail: "contact@ganaraj-ekta.org",
+  themePrimary: "#2563EB", 
+  themeSecondary: "#1E3A8A", 
+  themeGold: "#D4AF37", 
+  footerText: "© 2026 গণরাজ একতা সংঘ। সর্বস্বত্ব সংরক্ষিত।",
+  bannerUrl: "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=1200&q=80", 
+  logoUrl: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=200&q=80", 
+  socialFacebook: "https://facebook.com/ganaraj.ekta",
+  socialTwitter: "https://twitter.com/ganaraj_ekta",
+  socialYoutube: "https://youtube.com/c/ganaraj_ekta"
+};
+
 export default function App() {
   const [panelWrapper, setPanelWrapper] = useState<"public" | "admin" | "apply" | "member-cabinet">("public");
   
@@ -13,7 +39,7 @@ export default function App() {
   const [darkMode, setDarkMode] = useState<boolean>(false);
 
   // Database synchronization states
-  const [settings, setSettings] = useState<OrgSettings | null>(null);
+  const [settings, setSettings] = useState<OrgSettings | null>(DEFAULT_SETTINGS);
   const [notices, setNotices] = useState<Notice[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [donations, setDonations] = useState<Donation[]>([]);
