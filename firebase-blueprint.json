@@ -1,0 +1,90 @@
+{
+  "projectId": "encouraging-design-z6vd8",
+  "collections": {
+    "cms_database": {
+      "description": "State replication store for the complete CMS database JSON",
+      "documents": {
+        "main": {
+          "fields": {
+            "settings": "object",
+            "applications": "array",
+            "members": "array",
+            "notices": "array",
+            "events": "array",
+            "donations": "array",
+            "customPages": "array",
+            "visitorCount": "number",
+            "certificates": "array",
+            "adminLogs": "array"
+          }
+        }
+      }
+    },
+    "settings": {
+      "description": "Structured general settings for the CMS",
+      "documents": {
+        "main": {
+          "fields": {
+            "orgName": "string",
+            "slogan": "string",
+            "about": "string",
+            "presidentName": "string",
+            "secretaryName": "string",
+            "address": "string",
+            "contactPhone": "string",
+            "contactEmail": "string"
+          }
+        }
+      }
+    },
+    "applications": {
+      "description": "Membership application forms submitted by prospective members",
+      "schema": {
+        "fullNameEnglish": "string",
+        "fullNameBangla": "string",
+        "email": "string",
+        "mobileNumber": "string",
+        "status": "string",
+        "createdAt": "string"
+      }
+    },
+    "members": {
+      "description": "Approved members of the association with member IDs",
+      "schema": {
+        "memberId": "string",
+        "applicationId": "string",
+        "username": "string",
+        "status": "string"
+      }
+    },
+    "notices": {
+      "description": "General and administrative notices published on the portal",
+      "schema": {
+        "id": "string",
+        "title": "string",
+        "content": "string",
+        "date": "string"
+      }
+    },
+    "events": {
+      "description": "Upcoming and completed association events",
+      "schema": {
+        "id": "string",
+        "title": "string",
+        "description": "string",
+        "date": "string",
+        "volunteers": "array"
+      }
+    },
+    "donations": {
+      "description": "Financial donations contributed to the association",
+      "schema": {
+        "id": "string",
+        "donorName": "string",
+        "amount": "number",
+        "date": "string",
+        "status": "string"
+      }
+    }
+  }
+}

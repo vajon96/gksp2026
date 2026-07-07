@@ -386,57 +386,19 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({
               </div>
 
               {/* Contacts and details card */}
-              <div className="space-y-6 bg-white border border-gray-100 p-8 rounded-3xl shadow-xs flex flex-col justify-between">
+              <div className="space-y-6 bg-white border border-gray-100 p-8 rounded-3xl shadow-xs flex flex-col">
                 <div>
                   <h3 className="text-md font-black text-gray-900 border-l-4 pl-3.5 uppercase tracking-wide" style={{ borderColor: primaryColor }}>
-                    {lang === "en" ? "Key Representatives" : "মুখ্য কর্মকর্তা ও দায়িত্বশীল"}
+                    {lang === "en" ? "Address & Contacts" : "ঠিকানা ও যোগাযোগ ডেস্ক"}
                   </h3>
-                  <div className="divide-y divide-gray-100 mt-4">
-                    <div className="py-4 flex gap-3.5 items-center">
-                      {settings.presidentPhotoUrl ? (
-                        <img 
-                          src={settings.presidentPhotoUrl} 
-                          alt="President" 
-                          className="w-11 h-11 rounded-full object-cover border border-amber-200 shadow-xs shrink-0"
-                          referrerPolicy="no-referrer"
-                        />
-                      ) : (
-                        <div className="w-11 h-11 rounded-full border bg-orange-50 border-orange-100 flex items-center justify-center font-bold text-gray-600 overflow-hidden text-lg shrink-0">
-                          👨‍💼
-                        </div>
-                      )}
-                      <div>
-                        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{lang === "en" ? "President" : "মাননীয় সভাপতি"}</span>
-                        <h4 className="text-xs font-extrabold text-gray-800 leading-tight">{settings.presidentName}</h4>
-                      </div>
-                    </div>
-                    <div className="py-4 flex gap-3.5 items-center">
-                      {settings.vicePresidentPhotoUrl ? (
-                        <img 
-                          src={settings.vicePresidentPhotoUrl} 
-                          alt="Vice President" 
-                          className="w-11 h-11 rounded-full object-cover border border-teal-200 shadow-xs shrink-0"
-                          referrerPolicy="no-referrer"
-                        />
-                      ) : (
-                        <div className="w-11 h-11 rounded-full border bg-teal-50 border-teal-100 flex items-center justify-center font-bold text-gray-600 overflow-hidden text-lg shrink-0">
-                          👨‍🏫
-                        </div>
-                      )}
-                      <div>
-                        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{lang === "en" ? "Vice President" : "মাননীয় সহ-সভাপতি"}</span>
-                        <h4 className="text-xs font-extrabold text-gray-800 leading-tight">{settings.vicePresidentName || "সহ-সভাপতি (গণরাজ একতা সংঘ)"}</h4>
-                      </div>
-                    </div>
-                  </div>
                 </div>
 
-                <div className="pt-4 border-t border-gray-100 text-xs text-gray-600 space-y-3">
+                <div className="text-xs text-gray-600 space-y-4 pt-2">
                   <div>
                     <span className="font-bold text-gray-400 uppercase tracking-wider text-[9.5px] block mb-1">{t.address}</span>
                     <p className="leading-relaxed text-gray-700">{settings.address}</p>
                   </div>
-                  <div>
+                  <div className="pt-4 border-t border-gray-100">
                     <span className="font-bold text-gray-400 uppercase tracking-wider text-[9.5px] block mb-1">{t.contacts}</span>
                     <p className="leading-relaxed font-mono font-bold text-gray-800">{settings.contactPhone}</p>
                     <p className="leading-relaxed font-mono text-[10.5px] text-gray-400">{settings.contactEmail}</p>

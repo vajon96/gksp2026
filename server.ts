@@ -2,7 +2,7 @@ import express, { Request, Response, NextFunction } from "express";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { db } from "./server_db_store.ts";
+import { db, initFirebaseStore, firebaseAuth, firestoreDb } from "./server_db_store.ts";
 import { Application, Member, OrgSettings, Notice, Event, Donation, CustomPage, Certificate } from "./src/types.ts";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -16,6 +16,9 @@ async function bootstrap() {
   // Support large Base64 files for Photo, Signature, and NID uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+  // Initialize Firebase Admin Store before reading database cache
+  await initFirebaseStore();
 
   // Auto-initialize the requested Super Administrative Secret Key
   const databaseOnBoot = db.get();
@@ -167,6 +170,113 @@ async function bootstrap() {
     database.visitorCount += 1;
     db.save(database);
     res.json({ success: true, visitorCount: database.visitorCount });
+  });
+
+  // Expose public Firebase configuration to the client dynamically
+  app.get("/api/firebase-config", (req: Request, res: Response) => {
+    try {
+      const configPath = path.join(process.cwd(), "firebase-applet-config.json");
+      if (fs.existsSync(configPath)) {
+        const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
+        return res.json(config);
+      }
+      return res.status(404).json({ error: "Firebase config not found" });
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Authenticate - Google Auth verification and login
+  app.post("/api/auth/google-login", async (req: Request, res: Response) => {
+    try {
+      const { idToken } = req.body;
+      if (!idToken) {
+        return res.status(400).json({ success: false, message: "Google ID Token is required." });
+      }
+
+      if (!firebaseAuth) {
+        return res.status(500).json({ success: false, message: "Firebase Auth is not initialized on the server." });
+      }
+
+      // Verify the ID token using Firebase Admin SDK
+      const decodedToken = await firebaseAuth.verifyIdToken(idToken);
+      const email = decodedToken.email;
+
+      if (!email) {
+        return res.status(400).json({ success: false, message: "No email associated with this Google account." });
+      }
+
+      const database = db.get();
+
+      // 1. Check if the email belongs to the administrator
+      if (email.toLowerCase() === database.settings.contactEmail.toLowerCase()) {
+        addLog("superadmin", `Administrator logged into control panel using verified Google Account (${email})`, req);
+        return res.json({
+          success: true,
+          role: "admin",
+          username: "superadmin",
+          token: "ADMIN-SESSION-TOKEN-" + Date.now(),
+          isAdminPasswordChanged: database.isAdminPasswordChanged,
+          googleUser: {
+            email,
+            name: decodedToken.name || "Administrator",
+            picture: decodedToken.picture || ""
+          }
+        });
+      }
+
+      // 2. Check if the email belongs to any registered member
+      // Find an approved application with this email
+      const approvedApp = database.applications.find(
+        a => a.email.toLowerCase() === email.toLowerCase() && a.status === "approved"
+      );
+
+      if (approvedApp) {
+        const member = database.members.find(m => m.applicationId === approvedApp.id);
+        if (member) {
+          if (member.status === "suspended") {
+            return res.status(403).json({ success: false, message: "Your member profile has been suspended by the management." });
+          }
+
+          return res.json({
+            success: true,
+            role: "member",
+            memberId: member.memberId,
+            username: member.username,
+            fullName: approvedApp.fullNameEnglish || "Member",
+            token: "MEMBER-SESSION-TOKEN-" + member.memberId,
+            googleUser: {
+              email,
+              name: decodedToken.name || approvedApp.fullNameEnglish,
+              picture: decodedToken.picture || ""
+            }
+          });
+        }
+      }
+
+      // 3. Fallback: Check if there's any pending application with this email to show user-friendly status
+      const pendingApp = database.applications.find(
+        a => a.email.toLowerCase() === email.toLowerCase() && a.status === "pending"
+      );
+
+      if (pendingApp) {
+        return res.status(400).json({
+          success: false,
+          message: `Your membership application (${pendingApp.id}) is currently pending review. You will be able to log in with Google once approved.`,
+          isPending: true
+        });
+      }
+
+      // No match found
+      return res.status(404).json({
+        success: false,
+        message: `No approved member profile matches this Google account (${email}). Please register or contact the administrator.`
+      });
+
+    } catch (error: any) {
+      console.error("[GOOGLE LOGIN ERROR]", error);
+      res.status(500).json({ success: false, message: error.message || "Failed to authenticate with Google." });
+    }
   });
 
   // Authenticate - Admin specific login using the Administrative Secret Key
